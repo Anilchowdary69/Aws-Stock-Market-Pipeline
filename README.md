@@ -43,6 +43,32 @@ AWS Lambda — ProcessStockData
 All services monitored via Amazon CloudWatch Dashboard
 ```
 
+> Replace this text diagram with your draw.io architecture image
+
+---
+
+## Live Pipeline Screenshots
+
+### CloudWatch Monitoring Dashboard
+![CloudWatch Dashboard](cloudwatch-dashboard.png)
+> Replace with your actual CloudWatch dashboard screenshot showing Lambda invocations, errors, DynamoDB latency, and Kinesis incoming records spikes
+
+### SNS Trend Alert — Uptrend Notification
+![SNS Uptrend Alert](sns-uptrend-alert.png)
+> Replace with your actual SNS email showing the Golden Cross uptrend alert
+
+### SNS Trend Alert — Downtrend Notification
+![SNS Downtrend Alert](sns-downtrend-alert.png)
+> Replace with your actual SNS email showing the Death Cross downtrend alert
+
+### DynamoDB Records
+![DynamoDB Records](dynamodb-records.png)
+> Replace with your actual DynamoDB table showing processed stock records
+
+### S3 Raw Data
+![S3 Raw Data](s3-raw-data.png)
+> Replace with your actual S3 bucket showing raw JSON files organized by symbol and timestamp
+
 ---
 
 ## Services Used & Why
@@ -57,7 +83,7 @@ All services monitored via Amazon CloudWatch Dashboard
 | AWS Glue | Schema catalog | Defines S3 data structure so Athena can query it without loading data into a database first |
 | Amazon Athena | Historical SQL analysis | Pay-per-query serverless SQL. Chose over Redshift to avoid 24/7 cluster costs for occasional historical queries |
 | Amazon SNS | Real-time alerts | Simple fan-out notification system. One Lambda call notifies all subscribers simultaneously |
-| Amazon CloudWatch | Monitoring & observability | Tracks Lambda errors, invocation counts, DynamoDB capacity, and Kinesis throughput in one dashboard |
+| Amazon CloudWatch | Monitoring & observability | Tracks Lambda errors, invocation counts, DynamoDB latency, and Kinesis throughput in one dashboard |
 | IAM Roles | Security & permissions | Least-privilege access between all services |
 
 ---
@@ -96,6 +122,8 @@ When SMA-5 crosses above SMA-20 — prices are accelerating upward. This is a **
 
 When SMA-5 crosses below SMA-20 — prices are dropping. This is a **Death Cross** — a SELL signal. Lambda fires an SNS alert.
 
+During a 30-minute live test both a Golden Cross and Death Cross were detected and SNS alerts were delivered via email confirming the system works end to end.
+
 ---
 
 ## Project Structure
@@ -104,6 +132,11 @@ When SMA-5 crosses below SMA-20 — prices are dropping. This is a **Death Cross
 aws-stock-market-pipeline/
 ├── README.md
 ├── architecture-diagram.png
+├── cloudwatch-dashboard.png
+├── sns-uptrend-alert.png
+├── sns-downtrend-alert.png
+├── dynamodb-records.png
+├── s3-raw-data.png
 ├── src/
 │   └── stream_stock_data.py          # Local script — fetches & streams stock data to Kinesis
 ├── lambda/
@@ -167,13 +200,13 @@ WHERE ABS(((price - previous_close) / previous_close) * 100) > 5;
 
 ---
 
-## CloudWatch Monitoring
+## CloudWatch Monitoring Dashboard
 
 A CloudWatch dashboard monitors the entire pipeline in real time with the following widgets:
 
 - Lambda invocation count and error rate for ProcessStockData and StockTrendAnalysis
 - Kinesis incoming records and throughput per shard
-- DynamoDB read/write capacity consumption
+- DynamoDB SuccessfulRequestLatency for both Query and Scan operations
 - Lambda duration trends over time
 
 This provides full observability into the pipeline without checking each service individually — the same approach used in production environments.
@@ -217,7 +250,7 @@ This pipeline runs at approximately $1-2/month within AWS Free Tier limits.
 - Move from DynamoDB to Redshift for complex analytical queries at scale
 - Add Dead Letter Queue for failed Lambda records so no data is lost on processing errors
 - Replace the simple 5% anomaly threshold with a machine learning model trained on historical S3 data using SageMaker
-- Use AWS Secrets Manager instead of hardcoded ARNs and table names in Lambda environment variables
+- Use AWS Secrets Manager instead of hardcoded ARNs and table names in Lambda code
 - Full Terraform deployment for repeatable infrastructure across dev, staging, and production environments
 
 ---
