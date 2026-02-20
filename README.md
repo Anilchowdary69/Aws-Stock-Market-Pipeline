@@ -51,23 +51,18 @@ All services monitored via Amazon CloudWatch Dashboard
 
 ### CloudWatch Monitoring Dashboard
 ![CloudWatch Dashboard](cloudwatch-dashboard.png)
-> Replace with your actual CloudWatch dashboard screenshot showing Lambda invocations, errors, DynamoDB latency, and Kinesis incoming records spikes
 
 ### SNS Trend Alert — Uptrend Notification
 ![SNS Uptrend Alert](sns-uptrend-alert.png)
-> Replace with your actual SNS email showing the Golden Cross uptrend alert
 
 ### SNS Trend Alert — Downtrend Notification
 ![SNS Downtrend Alert](sns-downtrend-alert.png)
-> Replace with your actual SNS email showing the Death Cross downtrend alert
 
 ### DynamoDB Records
 ![DynamoDB Records](dynamodb-records.png)
-> Replace with your actual DynamoDB table showing processed stock records
 
 ### S3 Raw Data
 ![S3 Raw Data](s3-raw-data.png)
-> Replace with your actual S3 bucket showing raw JSON files organized by symbol and timestamp
 
 ---
 
