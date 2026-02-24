@@ -4,23 +4,6 @@ A production-grade, fully serverless data pipeline built on AWS that ingests, pr
 
 ---
 
-## Live Pipeline Screenshots
-
-### Architecture Diagram
-![Architecture Diagram](architecture-diagram.png)
-
-### CloudWatch Monitoring Dashboard
-![CloudWatch Dashboard](cloudwatch-dashboard.png)
-
-### SNS Trend Alert — Uptrend (Golden Cross)
-![SNS Uptrend Alert](sns-uptrend-alert.png)
-
-### SNS Trend Alert — Downtrend (Death Cross)
-![SNS Downtrend Alert](sns-downtrend-alert.png)
-
-
----
-
 ## What This Project Does
 
 This pipeline fetches live Apple (AAPL) stock price data every 30 seconds and streams it through a fully automated event-driven architecture on AWS. It processes and stores structured data for real-time querying, archives raw data for historical analysis, detects stock trend reversals using financial moving average algorithms, fires real-time email and SMS alerts when trend crossovers are detected, and monitors the entire system through a live CloudWatch dashboard — all without managing a single server.
@@ -31,71 +14,7 @@ The entire infrastructure is managed as code using Terraform and can be destroye
 
 ## Architecture
 
-```
-yfinance (Local Python Script)
-        |
-        | JSON stock data every 30 seconds
-        v
-Amazon Kinesis Data Streams (ON_DEMAND, 1 shard)
-        |
-        | Batch size 2, triggers every 60 seconds
-        v
-AWS Lambda — ProcessStockData (Python 3.13)
-        |
-        |-----> Amazon DynamoDB
-        |       (structured processed records,
-        |        partition key: symbol, sort key: timestamp)
-        |            |
-        |            | DynamoDB Streams — NEW_IMAGE
-        |            v
-        |       AWS Lambda — StockTrendAnalysis (Python 3.13)
-        |            |
-        |            | SMA-5 vs SMA-20 crossover detection
-        |            v
-        |       Amazon SNS — stock-trend-alerts
-        |            |
-        |            v
-        |       Email / SMS Alert to Subscriber
-        |
-        |-----> Amazon S3 — raw JSON archive
-                (s3://bucket/raw-data/AAPL/timestamp.json)
-                     |
-                     v
-              AWS Glue Data Catalog
-              (schema definition for Athena)
-                     |
-                     v
-              Amazon Athena
-              (SQL queries on historical S3 data)
-
-All services monitored via Amazon CloudWatch Dashboard
-All infrastructure managed via Terraform
-```
-
----
-
-## Infrastructure as Code — Terraform
-
-This entire pipeline is managed with Terraform. Every AWS resource — Kinesis stream, Lambda functions, DynamoDB table, S3 buckets, SNS topic, IAM roles, Glue catalog, and event triggers — is defined as code and version controlled in GitHub.
-
-**Deploy the entire pipeline from scratch:**
-```bash
-cd terraform
-terraform init
-terraform apply
-```
-
-**Tear down all 21 resources:**
-```bash
-terraform destroy
-```
-
-**Rebuild from zero after destroy:**
-```bash
-terraform apply
-```
-
-The complete pipeline redeploys in under 2 minutes from any machine with AWS credentials configured.
+![Architecture Diagram](architecture-diagram.png)
 
 ---
 
@@ -135,7 +54,7 @@ Separation of concerns. ProcessStockData handles ingestion and storage — it mu
 Trend analysis requires historical data already stored in DynamoDB. Triggering from Kinesis would mean the trend Lambda runs before data is persisted. DynamoDB Streams guarantees the record exists in the table before trend analysis begins — eliminating a race condition.
 
 **Why Terraform over console?**
-Clicking through the AWS console is not repeatable or version controlled. Terraform means any engineer can clone this repo and redeploy the complete infrastructure from scratch with two commands. It also means changes are reviewed before deployment and rollbacks are possible.
+Clicking through the AWS console is not repeatable or version controlled. Terraform means any engineer can clone this repo and redeploy the complete infrastructure from scratch with two commands. Changes are reviewed before deployment and rollbacks are possible.
 
 **Why ON_DEMAND Kinesis mode?**
 Eliminates the need to pre-provision shards and fits within AWS Free Tier. Auto-scales with throughput automatically. For a single stock at 30-second intervals this is significantly more cost-efficient than provisioned mode.
@@ -158,7 +77,43 @@ When SMA-5 crosses below SMA-20 it means short-term momentum is dropping. Lambda
 
 During a 30-minute live test both a Golden Cross and Death Cross were detected and SNS email alerts were delivered in real time confirming the complete end-to-end system works.
 
-The function requires a minimum of 20 records in DynamoDB before analysis begins — approximately 10 minutes of script runtime.
+---
+
+## Live Pipeline Screenshots
+
+### CloudWatch Monitoring Dashboard
+![CloudWatch Dashboard](cloudwatch-dashboard.png)
+
+### SNS Trend Alert — Uptrend (Golden Cross)
+![SNS Uptrend Alert](sns-uptrend-alert.png)
+
+### SNS Trend Alert — Downtrend (Death Cross)
+![SNS Downtrend Alert](sns-downtrend-alert.png)
+
+---
+
+## Infrastructure as Code — Terraform
+
+This entire pipeline is managed with Terraform. Every AWS resource — Kinesis stream, Lambda functions, DynamoDB table, S3 buckets, SNS topic, IAM roles, Glue catalog, and event triggers — is defined as code and version controlled in GitHub.
+
+**Deploy the entire pipeline from scratch:**
+```bash
+cd terraform
+terraform init
+terraform apply
+```
+
+**Tear down all 21 resources:**
+```bash
+terraform destroy
+```
+
+**Rebuild from zero after destroy:**
+```bash
+terraform apply
+```
+
+The complete pipeline redeploys in under 2 minutes from any machine with AWS credentials configured.
 
 ---
 
@@ -272,7 +227,7 @@ This pipeline runs at approximately $1-2 per month within AWS Free Tier limits.
 
 | Service | Free Tier | Project Usage |
 |---|---|---|
-| Kinesis | 1 shard free | 1 shard, approximately 2880 records per day |
+| Kinesis | 1 shard free | Approximately 2880 records per day |
 | Lambda | 1M requests per month free | Approximately 2880 invocations per day per function |
 | DynamoDB | 25GB storage free | Less than 1MB |
 | S3 | 5GB free | Less than 1MB |
