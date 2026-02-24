@@ -90,6 +90,12 @@ During a 30-minute live test both a Golden Cross and Death Cross were detected a
 ### SNS Trend Alert — Downtrend (Death Cross)
 ![SNS Downtrend Alert](sns-downtrend-alert.png)
 
+### DynamoDB — Processed Stock Records
+![DynamoDB Records](dynamodb-records.png)
+
+### S3 — Raw JSON Archive
+![S3 Raw Data](s3-raw-data.png)
+
 ---
 
 ## Infrastructure as Code — Terraform
@@ -262,14 +268,14 @@ Always stop the Python script with CTRL+C when not testing. Leaving it running c
 - Python 3.8+ with boto3 and yfinance (`pip install boto3 yfinance`)
 
 **Deploy infrastructure**
-'''
+```bash
 cd terraform
 terraform init
 terraform apply
 ```
 
 **Run the pipeline**
-```
+```bash
 python src/stream_stock_data.py
 ```
 
