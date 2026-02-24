@@ -9,7 +9,7 @@ STREAM_NAME = "stock_data_stream"
 STOCK_SYMBOL = "AAPL"
 DELAY_TIME = 30 # Time delay in seconds
 
-# Function to fetch stock data
+# Function to fetch stock data through yfinance
 def get_stock_data(symbol):
     try:
         stock = yf.Ticker(symbol)
