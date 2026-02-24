@@ -1,6 +1,7 @@
 import json
 import boto3
 import base64
+import os
 from decimal import Decimal
 
 # Initialize AWS Clients
@@ -8,8 +9,8 @@ dynamodb = boto3.resource("dynamodb")
 s3 = boto3.client("s3")
 
 # Resource Names
-DYNAMO_TABLE = "stock-data-table"
-S3_BUCKET = "stock-data-bucket6969"
+DYNAMO_TABLE = os.environ['DYNAMO_TABLE']
+S3_BUCKET = os.environ['S3_BUCKET']
 
 # Table reference
 table = dynamodb.Table(DYNAMO_TABLE)

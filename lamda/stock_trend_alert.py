@@ -1,6 +1,7 @@
 import boto3
 import json
 import decimal
+import os
 from datetime import datetime, timedelta
 
 # AWS Clients
@@ -8,8 +9,8 @@ dynamodb = boto3.resource("dynamodb")
 sns = boto3.client("sns")
 
 # DynamoDB Table Name and SNS ARN
-TABLE_NAME = "stock-data-table"
-SNS_TOPIC_ARN = "arn:aws:sns:us-east-1:027851298391:stock-trend-alerts"
+TABLE_NAME = os.environ['TABLE_NAME']
+SNS_TOPIC_ARN = os.environ['SNS_TOPIC_ARN']
 
 def get_recent_stock_data(symbol, minutes=5):
     """ Fetches stock data for the last 'minutes' from DynamoDB using Query instead of Scan """
