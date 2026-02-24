@@ -262,14 +262,14 @@ Always stop the Python script with CTRL+C when not testing. Leaving it running c
 - Python 3.8+ with boto3 and yfinance (`pip install boto3 yfinance`)
 
 **Deploy infrastructure**
-```bash
+'''
 cd terraform
 terraform init
 terraform apply
 ```
 
 **Run the pipeline**
-```bash
+```
 python src/stream_stock_data.py
 ```
 
