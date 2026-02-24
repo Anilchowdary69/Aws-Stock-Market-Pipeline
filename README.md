@@ -58,11 +58,6 @@ All services monitored via Amazon CloudWatch Dashboard
 ### SNS Trend Alert — Downtrend Notification
 ![SNS Downtrend Alert](sns-downtrend-alert.png)
 
-### DynamoDB Records
-![DynamoDB Records](dynamodb-records.png)
-
-### S3 Raw Data
-![S3 Raw Data](s3-raw-data.png)
 
 ---
 
