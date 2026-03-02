@@ -14,6 +14,7 @@ resource "aws_kinesis_stream" "stock_market_stream" {
 #this is for creating buckets for storing raw data and athena query results data
 resource "aws_s3_bucket" "raw_stock_data" {
   bucket = var.s3_bucket_name
+  force_destroy = true
 
   tags = {
     Project = "stock-market-pipeline"
@@ -22,6 +23,7 @@ resource "aws_s3_bucket" "raw_stock_data" {
 
 resource "aws_s3_bucket" "athena_results" {
   bucket = var.athena_bucket_name
+  force_destroy = true
 
   tags = {
     Project = "stock-market-pipeline"
