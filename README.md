@@ -47,17 +47,6 @@ Millisecond read/write latency is required for real-time stock lookups and trend
 **Why S3 and Athena for historical analysis instead of just using DynamoDB?**
 DynamoDB charges per read operation. Scanning thousands of historical records for trend analysis is expensive and slow at scale. S3 storage costs pennies per GB and Athena charges per query scanned — dramatically cheaper for occasional historical analysis. DynamoDB handles real-time fast lookups. S3 and Athena handle cheap historical analysis. Using both gives speed and cost efficiency.
 
-**Why two Lambda functions instead of one?**
-Separation of concerns. ProcessStockData handles ingestion and storage — it must be fast and lightweight. StockTrendAnalysis handles complex SMA calculations requiring historical DynamoDB data. Combining them would create a slow tightly coupled function that is harder to debug, scale, and maintain independently.
-
-**Why DynamoDB Streams instead of triggering trend Lambda from Kinesis?**
-Trend analysis requires historical data already stored in DynamoDB. Triggering from Kinesis would mean the trend Lambda runs before data is persisted. DynamoDB Streams guarantees the record exists in the table before trend analysis begins — eliminating a race condition.
-
-**Why Terraform over console?**
-Clicking through the AWS console is not repeatable or version controlled. Terraform means any engineer can clone this repo and redeploy the complete infrastructure from scratch with two commands. Changes are reviewed before deployment and rollbacks are possible.
-
-**Why ON_DEMAND Kinesis mode?**
-Eliminates the need to pre-provision shards and fits within AWS Free Tier. Auto-scales with throughput automatically. For a single stock at 30-second intervals this is significantly more cost-efficient than provisioned mode.
 
 ---
 
@@ -89,12 +78,6 @@ During a 30-minute live test both a Golden Cross and Death Cross were detected a
 
 ### SNS Trend Alert — Downtrend (Death Cross)
 ![SNS Downtrend Alert](sns-downtrend-alert.png)
-
-### DynamoDB — Processed Stock Records
-![DynamoDB Records](dynamodb-records.png)
-
-### S3 — Raw JSON Archive
-![S3 Raw Data](s3-raw-data.png)
 
 ---
 
@@ -144,33 +127,6 @@ Each processed record stored in DynamoDB:
 
 ---
 
-## Athena Queries
-
-```sql
--- Basic data retrieval
-SELECT * FROM stock_data_table LIMIT 10;
-
--- Top 5 price movements
-SELECT symbol, price, previous_close,
-       (price - previous_close) AS price_change
-FROM stock_data_table
-ORDER BY price_change DESC
-LIMIT 5;
-
--- Average trading volume per stock
-SELECT symbol, AVG(volume) AS avg_volume
-FROM stock_data_table
-GROUP BY symbol;
-
--- Anomalous price movements greater than 5 percent
-SELECT symbol, price, previous_close,
-       ROUND(((price - previous_close) / previous_close) * 100, 2) AS change_percent
-FROM stock_data_table
-WHERE ABS(((price - previous_close) / previous_close) * 100) > 5;
-```
-
----
-
 ## CloudWatch Monitoring Dashboard
 
 A live CloudWatch dashboard monitors the entire pipeline with the following widgets:
@@ -180,42 +136,12 @@ A live CloudWatch dashboard monitors the entire pipeline with the following widg
 - DynamoDB SuccessfulRequestLatency for Query and Scan operations
 - Lambda duration trends over time
 
-This provides complete observability into every layer of the pipeline from a single screen — the same approach used in production cloud environments.
+This provides complete observability into every layer of the pipeline from a single screen
 
 ---
 
-## Project Structure
-
-```
-aws-stock-market-pipeline/
-├── README.md
-├── architecture-diagram.png
-├── cloudwatch-dashboard.png
-├── sns-uptrend-alert.png
-├── sns-downtrend-alert.png
-├── dynamodb-records.png
-├── s3-raw-data.png
-├── src/
-│   └── stream_stock_data.py       # Fetches AAPL data and streams to Kinesis every 30s
-├── lambda/
-│   ├── lambda_function.py         # ProcessStockData — processes Kinesis records
-│   └── stock_trend_alert.py       # StockTrendAnalysis — SMA calculations and SNS alerts
-├── athena/
-│   └── queries.sql                # Historical analysis SQL queries
-├── terraform/
-│   ├── main.tf                    # All 21 AWS resources defined as code
-│   ├── variables.tf               # Configurable variables with defaults
-│   ├── outputs.tf                 # Post-deployment output values
-│   └── providers.tf               # AWS provider configuration
-└── docs/
-    └── design-decisions.md        # Detailed architectural reasoning
-```
-
----
 
 ## Challenges and Lessons Learned
-
-**Hidden Unicode character bug in Lambda:** Copy pasting code from documentation into the Lambda editor embedded invisible zero-width space characters (U+200B) causing a Runtime.UserCodeSyntaxError on a line that looked visually correct. Identified by checking CloudWatch logs and scanning for yellow highlighted characters in the Lambda code editor. Fixed by deleting the affected line and retyping manually. Lesson: always scan for yellow highlights in the Lambda editor before clicking Deploy.
 
 **Silent Lambda execution:** The StockTrendAnalysis Lambda silently skipped all analysis when fewer than 20 DynamoDB records existed. With no print statements in the original code it was impossible to tell if it was working or skipping. Added meaningful logging throughout the function to surface record counts, SMA values, and alert decisions in CloudWatch. Lesson: never write Lambda functions without logging — silent code is impossible to debug in serverless environments.
 
@@ -242,7 +168,7 @@ This pipeline runs at approximately $1-2 per month within AWS Free Tier limits.
 | CloudWatch | 10 metrics free | Under free tier limit |
 | Terraform | Free | Open source |
 
-Always stop the Python script with CTRL+C when not testing. Leaving it running continuously will exceed free tier limits.
+Always stop the Python script with CTRL+C when not testing.
 
 ---
 
