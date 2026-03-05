@@ -52,7 +52,7 @@ DynamoDB charges per read operation. Scanning thousands of historical records fo
 
 ## How Trend Detection Works
 
-The StockTrendAnalysis Lambda implements a real financial trading algorithm using Simple Moving Averages — the same concept used by professional traders worldwide.
+The StockTrendAnalysis Lambda implements a real financial trading algorithm using Simple Moving Averages
 
 **SMA-5** — average price of the last 5 readings. Reacts quickly to recent price movements.
 
